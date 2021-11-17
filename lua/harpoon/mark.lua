@@ -7,12 +7,44 @@ local log = require("harpoon.dev").log
 local M = {}
 local callbacks = {}
 
+local function create_mark(filename)
+    local cursor_pos = vim.api.nvim_win_get_cursor(0)
+    log.trace(
+        string.format(
+            "_create_mark(): Creating mark at row: %d, col: %d for %s",
+            cursor_pos[1],
+            cursor_pos[2],
+            filename
+        )
+    )
+    return {
+        filename = filename,
+        row = cursor_pos[1],
+        col = cursor_pos[2],
+    }
+end
+
 -- I am trying to avoid over engineering the whole thing.  We will likely only
 -- need one event emitted
 local function emit_changed()
     log.trace("_emit_changed()")
     if harpoon.get_global_settings().save_on_change then
         harpoon.save()
+    end
+
+    -- populate nonexistent values with `(empty)` entries
+    -- to maintain consistency and get expected behavior
+    -- harpoon list is expected to have 4+ items at all times
+    local list_len = M.get_length()
+    list_len = list_len > 4 and list_len or 4
+    local current_marks = harpoon.get_mark_config().marks
+    local processed_marks = { }
+    for idx = 1, list_len do
+        if current_marks[idx] then
+            table.insert(processed_marks, current_marks[idx])
+        else
+            harpoon.get_mark_config().marks[idx] = create_mark("")
+        end
     end
 
     if not callbacks["changed"] then
@@ -71,23 +103,6 @@ local function get_buf_name(id)
     -- not sure what to do here...
     --
     return ""
-end
-
-local function create_mark(filename)
-    local cursor_pos = vim.api.nvim_win_get_cursor(0)
-    log.trace(
-        string.format(
-            "_create_mark(): Creating mark at row: %d, col: %d for %s",
-            cursor_pos[1],
-            cursor_pos[2],
-            filename
-        )
-    )
-    return {
-        filename = filename,
-        row = cursor_pos[1],
-        col = cursor_pos[2],
-    }
 end
 
 local function mark_exists(buf_name)
