@@ -205,9 +205,19 @@ M.add_file = function(file_name_or_buf_id, mark_position_override)
     local buf_name = get_buf_name(file_name_or_buf_id)
     log.trace("add_file():", buf_name)
 
+    -- if file already in the list
     if M.valid_index(M.get_index_of(buf_name)) then
-        -- we don't alter file layout.
-        return
+        if mark_position_override then
+            -- to avoid having the same file
+            -- in the list more than 1 time
+            -- first remove the file from the list
+            M.rm_file(buf_name)
+            -- then it will be added back to the list
+            -- but with the new index
+        else
+            -- we don't alter file layout.
+            return
+        end
     end
 
     validate_buf_name(buf_name)
