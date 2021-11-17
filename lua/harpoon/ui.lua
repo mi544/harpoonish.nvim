@@ -87,7 +87,7 @@ M.toggle_quick_menu = function()
     for idx = 1, Marked.get_length() do
         local file = Marked.get_marked_file_name(idx)
         if file == "" then
-            file = "(empty)"
+            file = "-"
         end
         contents[idx] = string.format("%s", file)
     end
@@ -158,8 +158,12 @@ end
 M.nav_file = function(id)
     log.trace("nav_file(): Navigating to", id)
     local idx = Marked.get_index_of(id)
-    if not Marked.valid_index(idx) then
+    local is_placeholder = harpoon.get_mark_config().marks[id]
+    is_placeholder = is_placeholder and is_placeholder.filename
+    is_placeholder = is_placeholder == "-"
+    if not Marked.valid_index(idx) or is_placeholder then
         log.debug("nav_file(): No mark exists for id", id)
+        log.warn("No mark exists for id", id)
         return
     end
 
