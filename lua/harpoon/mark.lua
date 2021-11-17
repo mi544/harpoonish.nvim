@@ -200,7 +200,7 @@ M.valid_index = function(idx)
     return file_name ~= nil and file_name ~= ""
 end
 
-M.add_file = function(file_name_or_buf_id)
+M.add_file = function(file_name_or_buf_id, mark_position_override)
     filter_filetype()
     local buf_name = get_buf_name(file_name_or_buf_id)
     log.trace("add_file():", buf_name)
@@ -212,8 +212,14 @@ M.add_file = function(file_name_or_buf_id)
 
     validate_buf_name(buf_name)
 
-    local found_idx = get_first_empty_slot()
-    harpoon.get_mark_config().marks[found_idx] = create_mark(buf_name)
+    local mark_index = 0
+    if mark_position_override then
+        mark_index = mark_position_override
+    else
+        mark_index = get_first_empty_slot()
+    end
+
+    harpoon.get_mark_config().marks[mark_index] = create_mark(buf_name)
     M.remove_empty_tail(false)
     emit_changed()
 end
