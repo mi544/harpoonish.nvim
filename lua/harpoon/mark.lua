@@ -35,6 +35,7 @@ local function emit_changed()
     -- populate nonexistent values with `(empty)` entries
     -- to maintain consistency and get expected behavior
     -- harpoon list is expected to have 4+ items at all times
+    log.trace("_emit_changed(): Running helper function.")
     local list_len = M.get_length()
     list_len = list_len > 4 and list_len or 4
     local current_marks = harpoon.get_mark_config().marks
@@ -316,7 +317,20 @@ M.rm_file = function(file_name_or_buf_id)
     emit_changed()
 end
 
-M.clear_all = function()
+M.clear_all = function(reset_in_place)
+    if reset_in_place then
+        local list_len = M.get_length()
+        list_len = list_len > 4 and list_len or 4
+        local current_marks = harpoon.get_mark_config().marks
+        local processed_marks = { }
+        for idx = 1, list_len do
+            if current_marks[idx] then
+                table.insert(processed_marks, current_marks[idx])
+            else
+                harpoon.get_mark_config().marks[idx] = create_mark("")
+            end
+        end
+    end
     harpoon.get_mark_config().marks = {}
     log.trace("clear_all(): Clearing all marks.")
     emit_changed()
